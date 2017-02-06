@@ -8,16 +8,16 @@ source("~/Dropbox/makeThings/plot_worker.R")
 dir.create('out/adiv')
 
 # plot Shannon/Observed, smoothLine for num var; boxplot otherwise
-alpha_plot <- function(tmpdf, x) {
+alpha_plot <- function(df, x) {
 
-     measure <- tmpdf[,'variable'][1]
-     pl <- box_pval(tmpdf, x) + ylab(measure) 
+     measure <- df[,'variable'][1]
+     pl <- box_pval(df, x) + ylab(measure) 
 	   
      plotWidth <- ifelse((length(grep('__numeric__', x)) != 0), 
-                          3.5, 0.85*length(unique(tmpdf[[x]]))) 
+                          3.5, 0.85*length(unique(df[[x]]))) 
 
      ggsave(pl, path = "out/adiv", width = plotWidth, height = 3,
-     		filename = paste0('adiv_', x, measure, ".pdf"))
+     		filename = paste0('adiv_', x, '_', measure, ".pdf"))
 }
 
 main <- function() {

@@ -1,7 +1,6 @@
 
-plot_mp_box <- function(df, ppp = 4, n_col = 1) {
-  #ppp <- 4 
-  #n_col = 1
+plot_mp_box <- function(df, ppp, n_col, L) {
+  ## group and tax_files are global variables
   utax <- unique(df$tax)
   ntax <- length(utax)
   pdfname <- matrix(nrow = length(tax_files), ncol = length(group),
@@ -38,13 +37,16 @@ plot_mp_box <- function(df, ppp = 4, n_col = 1) {
         fit <- lm (value ~ tmp_split[[t]][ , group[g]],
                    data =  tmp_split[[t]] )
         p[t] <- anova(fit)$`Pr(>F)`[1]  }
-      
-      pg <- ggplot(tmp, aes( tmp[[ group[g] ]], value )) + 
-              xlab(NULL) + geom_boxplot() + geom_point() +
+
+      # character x-axis desired even for continuous vars 
+      pg <- ggplot(tmp, aes(as.character( tmp[[ group[g] ]] ), value )) + 
+					xlab(NULL) + 
+                    geom_boxplot() +
+					geom_point()  +
               facet_wrap(~ tax, 
                          scales = "free", 
                          ncol = n_col, 
-                         labeller = labeller(tax=label_wrap_gen(10)) ) +
+                         labeller = labeller(tax=label_wrap_gen(15)) ) +
               geom_text(aes(x, y, label = lab),  vjust = 1, size =3,
                    data = data.frame(x = 2,
                                     y = Inf,
@@ -83,7 +85,7 @@ box_pval <- function(df, x) {
 
         pl <- ggplot(df, aes_string(x, y)) + xlab(NULL) + 
               geom_boxplot(outlier.shape = NA) + geom_point() +
-              theme(axis.text.x = element_text(size = 10)) +
+              theme(axis.text.x = element_text(size = 34)) +
               annotate(x = pval_x, y = pval_y, geom = "text",
                        label = paste0("P=", pval))
         }
