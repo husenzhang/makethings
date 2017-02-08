@@ -1,36 +1,31 @@
 
 plot_mp_box <- function(df, groupfile, ppp, n_col, outputdir, pagew, pageh) {
-  group <- dimnames(read.delim(groupfile))[[2]]
   utax <- unique(df$tax)
   ntax <- length(utax)
+  group <- dimnames(read.delim(groupfile))[[2]]
   
-  for (g in seq_along(group)) {
-    plotSequence <- c(seq(0, ntax-1, by = ppp), ntax) # indices by page
-    
-    for(ii in 2:length(plotSequence)) {
-      start <- plotSequence[ii-1] + 1
-      end   <- plotSequence[ii]
-      
-      ## split df to tmp; drop unused factors in tmp$tax
+  # split df to pages
+  stops <- seq(1, nrow(df), by = ppp)
+  df$page <- factor(rep(1:length(stops), each = ppp, length.out = nrow(df)))
+  
+  ################################## work from here
       tmp <- subset(df, tax %in% utax[start:end])
       tmp$tax <- factor(tmp$tax)
-      utmp <- unique(tmp$tax)
-      cat(utmp, "\n")
-      
-      ## drop levels in tmp[ , group[g] ], no extra levels in plot
-      tmp <- tmp[tmp[ , group[g]] != "", ]
-      tmp <- droplevels(tmp)
-
-      # store p values
-      p <- vector(length = length(utmp))
-      
-      for (t in seq_along(utmp)) {
-        tmp_split <- split(tmp, factor(tmp$tax))
-        fit <- lm (value ~ tmp_split[[t]][ , group[g]],
-                   data =  tmp_split[[t]] )
-        p[t] <- anova(fit)$`Pr(>F)`[1]  }
-      
-      pdf(paste0(outputdir, "/", group[g], ".pdf")), width=pagew, height=pageh)
+      cat(unique(tmp$tax), "\n")                     # split df by tax
+    
+      for (g in group) {
+        tmp <- tmp[tmp[ ,g] != "", ]
+        tmp <- droplevels(tmp)                      # drop levels in g
+        p <- vector(length = length(unique(tmp$tax))) # store pvals
+        
+        for (t in seq_along(unique(tmp$tax))) {
+            tmp_split <- split(tmp, factor(tmp$tax))
+            fit <- lm (value ~ tmp_split[[t]][ , group[g]],
+                     data =  tmp_split[[t]] )
+            p[t] <- anova(fit)$`Pr(>F)`[1]  
+        }
+        
+      pdf(paste0(outputdir, "/", group[g], ".pdf"), width=pagew, height=pageh)
       # character x-axis desired even for continuous vars 
       pg <- ggplot(tmp, aes(as.character( tmp[[ group[g] ]] ), value )) + 
 					xlab(NULL) + 
@@ -44,7 +39,7 @@ plot_mp_box <- function(df, groupfile, ppp, n_col, outputdir, pagew, pageh) {
                    data = data.frame(x = 2,
                                     y = Inf,
                                     lab = paste0("P = ", round(p, 3)),
-                                    tax = utmp) ) 
+                                    tax = unique(tmp$tax)) ) 
       print(pg)
     }
     dev.off() 
