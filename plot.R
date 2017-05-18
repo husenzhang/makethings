@@ -15,7 +15,10 @@ group <- dimnames(read.delim(groupfile))[[2]]
 
 library(reshape2)
 library(ggplot2)
-theme_set(theme_bw())
+theme_set(theme_bw() + 
+          theme(panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank())
+         )
 source("~/Dropbox/makeThings/plot_worker.R")
 dir.create(outputdir)
 
