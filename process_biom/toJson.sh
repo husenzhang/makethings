@@ -2,8 +2,6 @@
 
 # QIIME version 1.9.1
 
-source /macqiime/configs/bash_profile.txt
-
 mv data/otu_tax.biom data/all.biom
 
 filter_taxa_from_otu_table.py -n c__Chloroplast \

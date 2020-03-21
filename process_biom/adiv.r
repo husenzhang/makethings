@@ -3,11 +3,11 @@
 library(ggplot2)
 theme_set(theme_bw() + theme(legend.key.size = unit(0.3, "cm")) )
 library(phyloseq)
-source("~/Dropbox/makeThings/plot_worker.R")
+source("~/Dropbox/makeThings/plot_worker.r")
 
 dir.create('out/adiv')
 
-# plot Shannon/Observed, smoothLine for num var; boxplot otherwise
+# plot Observed, smoothLine for num var; boxplot otherwise
 alpha_plot <- function(df, x) {
 
      measure <- df[,'variable'][1]
@@ -21,9 +21,9 @@ alpha_plot <- function(df, x) {
 }
 
 main <- function() {
-   # plot every measure + group
+   # treefilename not needed if not plotting PD_whole_tree 
    group <- dimnames(read.delim("data/group"))[[2]]
-   measures = c('Observed', 'Shannon', 'Fisher')
+   measures = c('Observed')
    ps <- import_biom('out/json', treefilename = 'data/rep_set.tre')
    df <- plot_richness(ps, measures = measures)$data
    

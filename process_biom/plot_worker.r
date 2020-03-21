@@ -1,34 +1,50 @@
+xLabSize = 15
 
-plot_mp_box <- function(df, groupfile, ppp, n_col, outputdir, pagew, pageh) {
+theme(axis.text.x = element_text(size = xLabSize ))
+
+plot_mp_box <- function(df, ppp, n_col, L) {
+  ## group and tax_files are global variables
   utax <- unique(df$tax)
   ntax <- length(utax)
-  group <- dimnames(read.delim(groupfile))[[2]]
-  
-  # split df to pages
-  stops <- seq(1, nrow(df), by = ppp)
-  df$page <- factor(rep(1:length(stops), each = ppp, length.out = nrow(df)))
-  
-  ################################## work from here
+  pdfname <- matrix(nrow = length(tax_files), ncol = length(group),
+                    dimnames = list(tax_files, group)) 
+
+  for (g in seq_along(group)) {
+
+    # indices for plotting vector
+    plotSequence <- c(seq(0, ntax-1, by = ppp), ntax)
+    
+    pdfname[L, g] <- paste0("L", L+1, "_",  group[g], ".pdf")
+    pdf(paste0("out/ctax/", pdfname[L, g]), 
+		width = 7, height = 10)
+    
+    for(ii in 2:length(plotSequence)) {
+      start <- plotSequence[ii-1] + 1
+      end   <- plotSequence[ii]
+      
+      ## split df to tmp; drop unused factors in tmp$tax
       tmp <- subset(df, tax %in% utax[start:end])
       tmp$tax <- factor(tmp$tax)
-      cat(unique(tmp$tax), "\n")                     # split df by tax
-    
-      for (g in group) {
-        tmp <- tmp[tmp[ ,g] != "", ]
-        tmp <- droplevels(tmp)                      # drop levels in g
-        p <- vector(length = length(unique(tmp$tax))) # store pvals
-        
-        for (t in seq_along(unique(tmp$tax))) {
-            tmp_split <- split(tmp, factor(tmp$tax))
-            fit <- lm (value ~ tmp_split[[t]][ , group[g]],
-                     data =  tmp_split[[t]] )
-            p[t] <- anova(fit)$`Pr(>F)`[1]  
-        }
-        
-      pdf(paste0(outputdir, "/", group[g], ".pdf"), width=pagew, height=pageh)
+      utmp <- unique(tmp$tax)
+      cat(utmp, "\n")
+      
+      ## drop levels in tmp[ , group[g] ], no extra levels in plot
+      tmp <- tmp[tmp[ , group[g]] != "", ]
+      tmp <- droplevels(tmp)
+
+      # store p values
+      p <- vector(length = length(utmp))
+      
+      for (t in seq_along(utmp)) {
+        tmp_split <- split(tmp, factor(tmp$tax))
+        fit <- lm (value ~ tmp_split[[t]][ , group[g]],
+                   data =  tmp_split[[t]] )
+        p[t] <- anova(fit)$`Pr(>F)`[1]  }
+
       # character x-axis desired even for continuous vars 
       pg <- ggplot(tmp, aes(as.character( tmp[[ group[g] ]] ), value )) + 
 					xlab(NULL) + 
+                    ylab(NULL) +
                     geom_boxplot() +
 					geom_point()  +
               facet_wrap(~ tax, 
@@ -39,7 +55,7 @@ plot_mp_box <- function(df, groupfile, ppp, n_col, outputdir, pagew, pageh) {
                    data = data.frame(x = 2,
                                     y = Inf,
                                     lab = paste0("P = ", round(p, 3)),
-                                    tax = unique(tmp$tax)) ) 
+                                    tax = utmp) ) 
       print(pg)
     }
     dev.off() 
@@ -68,14 +84,15 @@ box_pval <- function(df, x) {
 
         pval <- anova(lm( df[[ y ]] ~ df[[ x ]] ))$`Pr(>F)`[1]
         pval <- round(pval,3) 
+        pval <- ifelse(pval>0.000, pval, '<0.001')
+
         pval_x <- names(sort(tapply(df[[y]], df[[x]], mean))[1])
         pval_y <- max(df[[y]])
 
         pl <- ggplot(df, aes_string(x, y)) + xlab(NULL) + 
               geom_boxplot(outlier.shape = NA) + geom_point() +
-              theme(axis.text.x = element_text(size = 34)) +
               annotate(x = pval_x, y = pval_y, geom = "text",
-                       label = paste0("P=", pval))
+                       label = pval)
         }
 	return(pl)
 }
