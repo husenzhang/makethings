@@ -1,3 +1,2 @@
-# utils for processing Argonne Lab MiSeq 16S data
-
+/home/husen/Dropbox/argonne_16s/2016_Argonne_run/
 
